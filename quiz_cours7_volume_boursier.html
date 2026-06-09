@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quiz — Le Volume Boursier</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #F5F0E8;
+      color: #1a1a2e;
+      min-height: 100vh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 3rem 1.25rem 5rem;
+    }
+    .container { width: 100%; max-width: 600px; }
+    .header { margin-bottom: 2rem; }
+    .badge {
+      display: inline-block;
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: rgba(26,26,46,0.5);
+      background: rgba(26,26,46,0.06);
+      border: 1px solid rgba(26,26,46,0.12);
+      padding: 4px 12px; border-radius: 99px; margin-bottom: 14px;
+    }
+    .page-title {
+      font-family: 'EB Garamond', serif;
+      font-size: 38px; font-weight: 400;
+      color: #1a1a2e; line-height: 1.2; margin-bottom: 6px;
+    }
+    .page-subtitle { font-size: 14px; color: rgba(26,26,46,0.45); }
+    .divider { height: 1px; background: #ddd6ca; margin: 1.75rem 0; }
+    .progress-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .q-label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(26,26,46,0.4); }
+    .score-live { font-size: 13px; font-weight: 500; color: rgba(26,26,46,0.45); }
+    .progress-bar-bg { height: 3px; background: #ddd6ca; border-radius: 99px; margin-bottom: 1.75rem; }
+    .progress-bar-fill { height: 3px; background: #1a1a2e; border-radius: 99px; transition: width 0.5s ease; }
+    .question-card { background: #ffffff; border: 1px solid #ddd6ca; border-radius: 4px; padding: 1.75rem; margin-bottom: 1rem; }
+    .question-num { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(26,26,46,0.3); margin-bottom: 10px; }
+    .question-text { font-family: 'EB Garamond', serif; font-size: 22px; font-weight: 400; color: #1a1a2e; line-height: 1.5; }
+    .options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 1rem; }
+    .option-btn {
+      display: flex; align-items: center; gap: 12px;
+      padding: 13px 16px; border: 1px solid #ddd6ca; border-radius: 4px;
+      background: #ffffff; cursor: pointer; text-align: left;
+      font-size: 14px; font-family: 'Inter', sans-serif; color: #1a1a2e;
+      transition: all 0.15s; width: 100%;
+    }
+    .option-btn:hover:not(:disabled) { background: #f0ebe1; border-color: #b8b0a0; }
+    .option-letter {
+      width: 28px; height: 28px; border-radius: 50%;
+      border: 1px solid #ddd6ca; display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 600; color: rgba(26,26,46,0.35); flex-shrink: 0; transition: all 0.15s;
+    }
+    .option-btn.correct { border-color: #0F6E56; background: #E1F5EE; }
+    .option-btn.correct .option-letter { background: #0F6E56; color: white; border-color: #0F6E56; }
+    .option-btn.wrong { border-color: #993C1D; background: #FAECE7; }
+    .option-btn.wrong .option-letter { background: #993C1D; color: white; border-color: #993C1D; }
+    .option-btn.reveal { border-color: #0F6E56; background: #E1F5EE; opacity: 0.7; }
+    .option-btn.reveal .option-letter { background: #0F6E56; color: white; border-color: #0F6E56; }
+    .option-btn:disabled { cursor: default; }
+    .feedback { display: none; padding: 13px 16px; border-radius: 4px; font-size: 14px; font-style: italic; line-height: 1.6; margin-bottom: 1rem; }
+    .feedback.show { display: flex; gap: 10px; align-items: flex-start; }
+    .feedback.correct { background: #E1F5EE; color: #085041; border-left: 3px solid #0F6E56; }
+    .feedback.wrong { background: #FAECE7; color: #4A1B0C; border-left: 3px solid #993C1D; }
+    .nav-area { display: flex; justify-content: flex-end; }
+    .btn-next {
+      padding: 10px 28px; border-radius: 4px; background: #1a1a2e; color: white; border: none;
+      font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif; letter-spacing: 0.04em;
+      cursor: pointer; display: none; transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn-next:hover { opacity: 0.82; }
+    .btn-next:active { transform: scale(0.98); }
+    .results-wrap { display: none; }
+    .score-row {
+      display: flex; align-items: center; gap: 1.75rem;
+      background: #ffffff; border: 1px solid #ddd6ca; border-radius: 4px;
+      padding: 1.75rem; margin-bottom: 1.75rem;
+    }
+    .score-circle {
+      width: 88px; height: 88px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'EB Garamond', serif; font-size: 26px; font-weight: 400; flex-shrink: 0;
+    }
+    .score-text h2 { font-family: 'EB Garamond', serif; font-size: 24px; font-weight: 400; color: #1a1a2e; margin-bottom: 4px; }
+    .score-text p { font-size: 14px; color: rgba(26,26,46,0.5); line-height: 1.5; }
+    .review-label { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(26,26,46,0.3); margin-bottom: 1rem; }
+    .review-item { background: #ffffff; border: 1px solid #ddd6ca; border-radius: 4px; padding: 1rem 1.25rem; margin-bottom: 8px; }
+    .review-q { font-size: 14px; font-weight: 500; color: #1a1a2e; margin-bottom: 6px; display: flex; gap: 10px; align-items: flex-start; }
+    .review-answer { font-size: 13px; color: rgba(26,26,46,0.5); font-style: italic; display: flex; gap: 6px; }
+    .review-answer strong { color: rgba(26,26,46,0.7); font-style: normal; }
+    .tag { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 99px; flex-shrink: 0; }
+    .tag-correct { background: #E1F5EE; color: #085041; border: 1px solid #9FE1CB; }
+    .tag-wrong { background: #FAECE7; color: #4A1B0C; border: 1px solid #F5C4B3; }
+    .btn-retry {
+      margin-top: 1.5rem; width: 100%; padding: 11px; border-radius: 4px;
+      border: 1px solid #c8c0b0; background: #fff; color: rgba(26,26,46,0.55);
+      font-size: 13px; font-weight: 600; font-family: 'Inter', sans-serif;
+      letter-spacing: 0.04em; cursor: pointer; transition: all 0.15s;
+    }
+    .btn-retry:hover { background: #f0ebe1; color: #1a1a2e; }
+    @media (max-width: 480px) {
+      .page-title { font-size: 30px; }
+      .question-text { font-size: 19px; }
+      .score-row { flex-direction: column; text-align: center; gap: 1rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <div class="header">
+      <div class="badge">Cours 7</div>
+      <h1 class="page-title">Le Volume Boursier</h1>
+      <p class="page-subtitle">5 questions pour valider vos connaissances</p>
+    </div>
+
+    <div class="divider"></div>
+
+    <div id="quizWrap">
+      <div class="progress-meta">
+        <span class="q-label" id="qCounter">Question 1 sur 5</span>
+        <span class="score-live" id="scoreLive">0 / 5</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressBar" style="width:20%"></div>
+      </div>
+      <div class="question-card">
+        <div class="question-num" id="questionNum">Question 1</div>
+        <div class="question-text" id="questionText"></div>
+      </div>
+      <div class="options" id="optionsWrap"></div>
+      <div class="feedback" id="feedback"></div>
+      <div class="nav-area">
+        <button class="btn-next" id="btnNext">Suivant →</button>
+      </div>
+    </div>
+
+    <div class="results-wrap" id="resultsWrap">
+      <div class="score-row">
+        <div class="score-circle" id="scoreCircle"></div>
+        <div class="score-text">
+          <h2 id="scoreMsg"></h2>
+          <p id="scoreDetail"></p>
+        </div>
+      </div>
+      <div class="review-label">Révision des réponses</div>
+      <div id="reviewList"></div>
+      <button class="btn-retry" onclick="restartQuiz()">↺ Recommencer le quiz</button>
+    </div>
+
+  </div>
+
+  <script>
+    const questions = [
+      {
+        q: "Pourquoi le volume est-il considéré comme plus fiable que le prix seul pour évaluer un mouvement de marché ?",
+        opts: [
+          "Car le volume est calculé par les régulateurs et vérifié chaque soir",
+          "Car un prix peut être manipulé par peu d'acteurs sur faible liquidité, alors que le volume exige de l'argent réel engagé et est beaucoup plus difficile à falsifier",
+          "Car le volume reflète uniquement les transactions des investisseurs institutionnels",
+          "Car le volume est toujours corrélé positivement avec les bénéfices de l'entreprise"
+        ],
+        correct: 1,
+        explanation: "Le prix enregistre ce qui s'est passé — il peut être manipulé sur un titre peu liquide par quelques acteurs. Le volume, lui, mesure l'intensité réelle de la participation : pour le faire monter, il faut réellement acheter ou vendre. C'est l'empreinte digitale de la conviction institutionnelle."
+      },
+      {
+        q: "Vous observez un titre dont le prix monte régulièrement mais dont le volume diminue depuis plusieurs séances. Que signale cette divergence ?",
+        opts: [
+          "La tendance est saine et les acheteurs sont confiants — bon signal d'entrée",
+          "Le marché est en phase de consolidation avant une accélération haussière",
+          "Les acheteurs se retirent en silence — la hausse s'essouffle et un retournement est probable",
+          "Les institutionnels accumulent discrètement avant une annonce"
+        ],
+        correct: 2,
+        explanation: "Prix en hausse + volume en baisse = divergence dangereuse. La participation diminue : les acheteurs se retirent progressivement. Un chandelier vert sur volume anémique n'est pas un signal d'entrée — c'est un avertissement. L'essoufflement précède presque toujours le retournement."
+      },
+      {
+        q: "Qu'est-ce qu'un « Blow-off Top » et quel signal donne-t-il au trader ?",
+        opts: [
+          "Une ouverture en gap up sur volume faible — signal baissier à court terme",
+          "Une longue bougie haussière accompagnée d'un volume anormalement élevé (3× à 5× la moyenne) marquant souvent la fin de la tendance haussière",
+          "Un chandelier avec un petit corps et une longue mèche haute indiquant un rejet du prix",
+          "Une période de faible volatilité précédant une cassure directionnelle"
+        ],
+        correct: 1,
+        explanation: "Le Blow-off Top est le dernier souffle euphorique d'une tendance : prix très long + volume explosif 3× à 5× la moyenne. Les retardataires en proie au FOMO entrent massivement au pire moment. Les vendeurs absorbent toute la demande résiduelle et le retournement brutal suit. Le même principe s'applique à la baisse avec la bougie de capitulation."
+      },
+      {
+        q: "Face à un gap up à l'ouverture, comment le volume des premières minutes vous aide-t-il à décider s'il faut shorter ou non ?",
+        opts: [
+          "Un volume supérieur à la moyenne confirme le gap d'épuisement — idéal pour shorter",
+          "Le volume des premières minutes n'est pas fiable car il inclut les ordres pré-marché",
+          "Un volume massif signale la conviction institutionnelle — ne pas shorter ; un faible volume révèle peu de participants et un probable retour vers le support",
+          "Un faible volume indique que les institutionnels accumulent — c'est le meilleur moment pour acheter"
+        ],
+        correct: 2,
+        explanation: "Gap Up + volume massif = les institutionnels ont décidé, la conviction est réelle — shorter serait se mettre contre le flux. Gap Up + faible volume = peu de participants valident le mouvement, vide de liquidité en dessous, retour probable. Si le volume des 5–15 premières minutes est inférieur à 50% de la moyenne quotidienne, le gap est de faible conviction."
+      },
+      {
+        q: "Vous voyez une très grande barre de volume mais le chandelier correspondant a un petit corps et de longues mèches. Qu'est-ce que cela signifie ?",
+        opts: [
+          "Les acheteurs contrôlent parfaitement la séance — tendance haussière confirmée",
+          "Des vendeurs cachés absorbent silencieusement toute la demande entrante — signe probable de distribution institutionnelle avant retournement",
+          "Le titre est en phase d'accumulation par les fonds de pension — signal d'achat fort",
+          "Le volume élevé confirme la validité du support technique sur lequel repose le cours"
+        ],
+        correct: 1,
+        explanation: "Gros volume + petit corps = l'effort sans résultat. Pour chaque acheteur agressif, un institutionnel vend discrètement. Le mouvement de prix est neutralisé. C'est le signal classique de distribution cachée — les gros porteurs se délestent de leurs positions avant un retournement baissier. À ne pas confondre avec gros volume + grand corps qui, lui, confirme la tendance."
+      }
+    ];
+
+    let current = 0, score = 0, userAnswers = [];
+    const letters = ['A','B','C','D'];
+
+    function renderQuestion() {
+      const q = questions[current];
+      document.getElementById('progressBar').style.width = ((current+1)/questions.length*100)+'%';
+      document.getElementById('qCounter').textContent = `Question ${current+1} sur ${questions.length}`;
+      document.getElementById('scoreLive').textContent = `${score} / ${questions.length}`;
+      document.getElementById('questionNum').textContent = `Question ${current+1}`;
+      document.getElementById('questionText').textContent = q.q;
+
+      const wrap = document.getElementById('optionsWrap');
+      wrap.innerHTML = '';
+      q.opts.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerHTML = `<span class="option-letter">${letters[i]}</span><span>${opt}</span>`;
+        btn.onclick = () => selectAnswer(i, btn);
+        wrap.appendChild(btn);
+      });
+
+      document.getElementById('feedback').className = 'feedback';
+      document.getElementById('feedback').innerHTML = '';
+      document.getElementById('btnNext').style.display = 'none';
+    }
+
+    function selectAnswer(idx, btn) {
+      const q = questions[current];
+      const btns = document.querySelectorAll('.option-btn');
+      btns.forEach(b => b.disabled = true);
+      userAnswers.push(idx);
+
+      const fb = document.getElementById('feedback');
+      if (idx === q.correct) {
+        score++;
+        btn.classList.add('correct');
+        fb.className = 'feedback correct show';
+        fb.innerHTML = `<span>✓</span><span>${q.explanation}</span>`;
+      } else {
+        btn.classList.add('wrong');
+        btns[q.correct].classList.add('reveal');
+        fb.className = 'feedback wrong show';
+        fb.innerHTML = `<span>✗</span><span>Incorrect. ${q.explanation}</span>`;
+      }
+
+      document.getElementById('scoreLive').textContent = `${score} / ${questions.length}`;
+      const nextBtn = document.getElementById('btnNext');
+      nextBtn.style.display = 'block';
+      nextBtn.textContent = current < questions.length - 1 ? 'Suivant →' : 'Voir mes résultats →';
+    }
+
+    document.getElementById('btnNext').onclick = () => {
+      current++;
+      if (current < questions.length) renderQuestion();
+      else showResults();
+    };
+
+    function showResults() {
+      document.getElementById('quizWrap').style.display = 'none';
+      document.getElementById('resultsWrap').style.display = 'block';
+
+      const pct = Math.round(score / questions.length * 100);
+      const circle = document.getElementById('scoreCircle');
+      circle.textContent = `${score} / ${questions.length}`;
+
+      if (pct >= 80) {
+        circle.style.cssText = 'background:#E1F5EE;color:#085041;border:1px solid #9FE1CB;width:88px;height:88px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:"EB Garamond",serif;font-size:26px;flex-shrink:0';
+        document.getElementById('scoreMsg').textContent = 'Excellent travail !';
+        document.getElementById('scoreDetail').textContent = 'Vous savez lire le volume comme un pro. Passez au cours suivant.';
+      } else if (pct >= 60) {
+        circle.style.cssText = 'background:#FAEEDA;color:#633806;border:1px solid #FAC775;width:88px;height:88px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:"EB Garamond",serif;font-size:26px;flex-shrink:0';
+        document.getElementById('scoreMsg').textContent = 'Bon résultat !';
+        document.getElementById('scoreDetail').textContent = 'Revoyez les 4 configurations clés avant de passer à la suite.';
+      } else {
+        circle.style.cssText = 'background:#FAECE7;color:#4A1B0C;border:1px solid #F5C4B3;width:88px;height:88px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:"EB Garamond",serif;font-size:26px;flex-shrink:0';
+        document.getElementById('scoreMsg').textContent = 'À retravailler';
+        document.getElementById('scoreDetail').textContent = 'Relisez attentivement le cours sur le volume avant de continuer.';
+      }
+
+      const list = document.getElementById('reviewList');
+      list.innerHTML = '';
+      questions.forEach((q, i) => {
+        const ok = userAnswers[i] === q.correct;
+        const div = document.createElement('div');
+        div.className = 'review-item';
+        div.innerHTML = `
+          <div class="review-q">
+            <span class="tag ${ok ? 'tag-correct' : 'tag-wrong'}">${ok ? '✓' : '✗'}</span>
+            <span>${q.q}</span>
+          </div>
+          <div class="review-answer">
+            <span>→</span>
+            <span>Bonne réponse : <strong>${q.opts[q.correct]}</strong></span>
+          </div>`;
+        list.appendChild(div);
+      });
+    }
+
+    function restartQuiz() {
+      current = 0; score = 0; userAnswers = [];
+      document.getElementById('quizWrap').style.display = 'block';
+      document.getElementById('resultsWrap').style.display = 'none';
+      renderQuestion();
+    }
+
+    renderQuestion();
+  </script>
+</body>
+</html>
